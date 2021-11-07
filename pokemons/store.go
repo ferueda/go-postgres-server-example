@@ -1,6 +1,6 @@
 package pokemons
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 type Store struct {
 	db *gorm.DB

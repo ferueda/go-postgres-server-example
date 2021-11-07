@@ -15,27 +15,26 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var dbURI, dialect, port, addr string
+var dbURI, port, addr string
 
 func init() {
 	fmt.Println("loading env vars")
 
 	port = os.Getenv("PORT")
-	addr = os.Getenv("ADDRESS") + ":" + port
+	addr = os.Getenv("HOST") + ":" + port
 
-	dialect = os.Getenv("DIALECT")
-	host := os.Getenv("HOST")
-	dbPort := os.Getenv("DBPORT")
-	dbUser := os.Getenv("USER")
-	dbName := os.Getenv("DBNAME")
-	dbPassword := os.Getenv("PASSWORD")
+	host := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbName := os.Getenv("DB_NAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
 
-	dbURI = fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s port=%s", host, dbUser, dbName, dbPassword, dbPort)
+	dbURI = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", host, dbUser, dbPassword, dbName, dbPort)
 }
 
 func main() {
 	// DB setup
-	db, err := db.Init(dbURI, dialect)
+	db, err := db.Init(dbURI)
 	if err != nil {
 		log.Fatal("error loading db")
 	}
@@ -78,7 +77,6 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
-	db.Close()
 	srv.Shutdown(ctx)
 	log.Println("shutting down")
 	os.Exit(0)

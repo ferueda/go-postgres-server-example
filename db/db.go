@@ -7,17 +7,17 @@ import (
 	"os"
 
 	"github.com/ferueda/go-postgres-server-example/pokemons"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 var err error
 
-func Init(dbURI string, dialect string) (*gorm.DB, error) {
-	fmt.Printf("connecting to %s db\n", dialect)
+func Init(dbURI string) (*gorm.DB, error) {
+	fmt.Println("connecting to db")
 
-	db, err = gorm.Open(dialect, dbURI)
+	db, err = gorm.Open(postgres.Open(dbURI), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func Init(dbURI string, dialect string) (*gorm.DB, error) {
 func runMigrations(db *gorm.DB) error {
 	pokemonModel := pokemons.Pokemon{}
 
-	db.DropTable(&pokemonModel)
+	db.Migrator().DropTable(&pokemonModel)
 	db.AutoMigrate(&pokemonModel)
 
 	pokemons, err := getPokemonsFromFile("pokemons.json")
