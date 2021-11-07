@@ -1,9 +1,9 @@
 go-postgres-server-example
 =======
 
-A basic CRUD API written in Go (Golang) with a PostgreSQL db.
+A basic CRUD API written in Go with a PostgreSQL db.
 
 ## Stack
-- Go (Golang)
+- Go
 - PostgreSQL
-- gorilla/mux (https://github.com/gorilla/mux)
+- [gorilla/mux](https://github.com/gorilla/mux)
