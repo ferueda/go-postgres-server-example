@@ -13,13 +13,13 @@ func NewStore(db *gorm.DB) *Store {
 }
 
 func (s *Store) GetOne(id uint) *Pokemon {
-	pokemon := &Pokemon{}
-	s.db.First(pokemon, id)
-	return pokemon
+	var p Pokemon
+	s.db.First(&p, id)
+	return &p
 }
 
 func (s *Store) GetAll() []*Pokemon {
-	pokemons := []*Pokemon{}
-	s.db.Find(&pokemons)
-	return pokemons
+	var pp []*Pokemon
+	s.db.Find(&pp)
+	return pp
 }
