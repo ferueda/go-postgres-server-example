@@ -18,8 +18,8 @@ func NewHandler(s *Store, l *log.Logger) *PokemonHandler {
 	return &PokemonHandler{store: s, logger: l}
 }
 
-func (ph *PokemonHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	pokemons := ph.store.GetAll()
+func (h *PokemonHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	pokemons := h.store.GetAll()
 
 	w.Header().Add("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(pokemons); err != nil {
@@ -28,7 +28,7 @@ func (ph *PokemonHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ph *PokemonHandler) GetOne(w http.ResponseWriter, r *http.Request) {
+func (h *PokemonHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -42,7 +42,7 @@ func (ph *PokemonHandler) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pokemon := ph.store.GetOne(uint(intId))
+	pokemon := h.store.GetOne(uint(intId))
 	if err != nil {
 		if err.Error() == "not found" {
 			http.Error(w, "not found", http.StatusNotFound)
