@@ -12,6 +12,7 @@ import (
 
 	"github.com/ferueda/go-postgres-server-example/db"
 	"github.com/ferueda/go-postgres-server-example/pokemons"
+	"github.com/ferueda/go-postgres-server-example/users"
 	"github.com/gorilla/mux"
 )
 
@@ -45,12 +46,20 @@ func main() {
 	flag.Parse()
 
 	l := log.New(os.Stdout, "pokemons-api", log.LstdFlags)
+
 	ps := pokemons.NewStore(db)
 	ph := pokemons.NewHandler(ps, l)
 
+	us := users.NewStore(db)
+	uh := users.NewHandler(us, l)
+
 	r := mux.NewRouter()
+
 	r.HandleFunc("/pokemons", ph.GetAll).Methods("GET")
 	r.HandleFunc("/pokemons/{id:[0-9]+}", ph.GetOne).Methods("GET")
+
+	r.HandleFunc("/signup", uh.SignUp).Methods("POST")
+	r.HandleFunc("/signin", uh.SignIn).Methods("POST")
 
 	http.Handle("/", r)
 
