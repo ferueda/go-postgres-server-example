@@ -11,10 +11,10 @@ import (
 type User struct {
 	gorm.Model
 
-	Name         string             `json:"name" gorm:"unique;not null;"`
-	Email        string             `json:"email" gorm:"unique;not null;"`
-	PasswordHash string             `json:"-" gorm:"unique;not null;"`
-	Favorites    []pokemons.Pokemon `json:"favorites" gorm:"many2many:user_pokemons;"`
+	Name         string              `json:"name" gorm:"not null;"`
+	Email        string              `json:"email" gorm:"unique;not null;"`
+	PasswordHash string              `json:"-" gorm:"unique;not null;"`
+	Pokemons     []*pokemons.Pokemon `json:"favorites" gorm:"many2many:user_pokemons;"`
 }
 
 func (u *User) HashPassword(password string) (string, error) {
