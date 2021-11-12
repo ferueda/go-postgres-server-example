@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 
+	"github.com/ferueda/go-postgres-server-example/pokemons"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +21,7 @@ func (s *Store) GetById(id uint) (*User, error) {
 	var u User
 	if err := s.db.First(&u, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, errors.New("not found")
 		}
 		return nil, err
 	}
@@ -31,7 +32,7 @@ func (s *Store) GetByEmail(email string) (*User, error) {
 	var u User
 	if err := s.db.Where(&User{Email: email}).First(&u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, errors.New("not found")
 		}
 		return nil, err
 	}
@@ -56,4 +57,27 @@ func (s *Store) Create(name, email, password string) (*User, error) {
 	u.PasswordHash = hp
 
 	return &u, s.db.Create(&u).Error
+}
+
+func (s *Store) GetFavorites(u *User) ([]*pokemons.Pokemon, error) {
+	var f []*pokemons.Pokemon
+
+	if err := s.db.Model(u).Association("Pokemons").Find(&f); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("not found")
+		}
+	}
+	return f, nil
+}
+
+func (s *Store) AddFavorite(u *User, pid uint) (*pokemons.Pokemon, error) {
+	ps := pokemons.NewStore(s.db)
+	p := ps.GetOne(pid)
+
+	err := s.db.Model(u).Association("Pokemons").Append(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
