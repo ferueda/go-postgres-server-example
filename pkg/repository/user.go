@@ -8,25 +8,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type Store interface {
+type UserStore interface {
 	CreateUser(r api.NewUserRequest) (*api.User, error)
 	GetUserByEmail(email string) (*api.User, error)
 	CheckUserPassword(u api.User, password string) bool
-	GetAllPokemons() ([]*api.Pokemon, error)
-	GetPokemonById(id uint) (*api.Pokemon, error)
 }
 
-type store struct {
+type userStore struct {
 	db *gorm.DB
 }
 
-func NewStore(db *gorm.DB) Store {
-	return &store{
+func NewUserStore(db *gorm.DB) UserStore {
+	return &userStore{
 		db: db,
 	}
 }
 
-func (s *store) CreateUser(r api.NewUserRequest) (*api.User, error) {
+func (s *userStore) CreateUser(r api.NewUserRequest) (*api.User, error) {
 	ph, err := hashPassword(r.Password)
 	if err != nil {
 		return nil, err
@@ -36,7 +34,7 @@ func (s *store) CreateUser(r api.NewUserRequest) (*api.User, error) {
 	return &u, s.db.Create(&u).Error
 }
 
-func (s *store) GetUserByEmail(email string) (*api.User, error) {
+func (s *userStore) GetUserByEmail(email string) (*api.User, error) {
 	var u api.User
 	if err := s.db.Where(&api.User{Email: email}).First(&u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -47,7 +45,7 @@ func (s *store) GetUserByEmail(email string) (*api.User, error) {
 	return &u, nil
 }
 
-func (s *store) CheckUserPassword(u api.User, password string) bool {
+func (s *userStore) CheckUserPassword(u api.User, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
 }
@@ -58,25 +56,4 @@ func hashPassword(password string) (string, error) {
 	}
 	h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(h), err
-}
-
-func (s *store) GetAllPokemons() ([]*api.Pokemon, error) {
-	var pokemons []*api.Pokemon
-	if err := s.db.Find(&pokemons).Error; err != nil {
-		return nil, err
-	}
-	return pokemons, nil
-}
-
-func (s *store) GetPokemonById(id uint) (*api.Pokemon, error) {
-	var p api.Pokemon
-
-	if err := s.db.Where(&api.Pokemon{ID: id}).First(&p).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("not found")
-		}
-		return nil, err
-	}
-
-	return &p, nil
 }

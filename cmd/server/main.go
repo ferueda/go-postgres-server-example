@@ -43,12 +43,14 @@ func run() error {
 		log.Fatal("error loading db")
 	}
 
-	s := repository.NewStore(db)
-	us := api.NewUserService(s)
-	ps := api.NewPokemonService(s)
+	uStore := repository.NewUserStore(db)
+	pStore := repository.NewPokemonStore(db)
+
+	uService := api.NewUserService(uStore)
+	pService := api.NewPokemonService(pStore)
 	r := mux.NewRouter()
 
-	server := app.NewServer(r, addr, us, ps)
+	server := app.NewServer(r, addr, uService, pService)
 	err = server.Run()
 	if err != nil {
 		return err
