@@ -28,11 +28,11 @@ func Init(dbURI string) (*gorm.DB, error) {
 }
 
 func runMigrations(db *gorm.DB) error {
-	pokemonModel := &pokemons.Pokemon{}
-	userModel := &users.User{}
+	pokemonModel := pokemons.Pokemon{}
+	userModel := users.User{}
 
-	db.Migrator().DropTable(pokemonModel)
-	db.AutoMigrate(pokemonModel, userModel)
+	db.Migrator().DropTable(&pokemonModel)
+	db.AutoMigrate(&pokemonModel, &userModel)
 
 	pokemons, err := getPokemonsFromFile("pokemons.json")
 	if err != nil {
