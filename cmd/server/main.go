@@ -45,9 +45,10 @@ func run() error {
 
 	s := repository.NewStore(db)
 	us := api.NewUserService(s)
+	ps := api.NewPokemonService(s)
 	r := mux.NewRouter()
 
-	server := app.NewServer(r, addr, us)
+	server := app.NewServer(r, addr, us, ps)
 	err = server.Run()
 	if err != nil {
 		return err
