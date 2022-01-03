@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ferueda/go-postgres-server-example/pokemons"
-	"github.com/ferueda/go-postgres-server-example/users"
+	"github.com/ferueda/go-postgres-server-example/pkg/api"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -28,8 +27,8 @@ func Init(dbURI string) (*gorm.DB, error) {
 }
 
 func runMigrations(db *gorm.DB) error {
-	pokemonModel := pokemons.Pokemon{}
-	userModel := users.User{}
+	pokemonModel := api.Pokemon{}
+	userModel := api.User{}
 
 	db.Migrator().DropTable(&pokemonModel)
 	db.AutoMigrate(&pokemonModel, &userModel)
@@ -47,7 +46,7 @@ func runMigrations(db *gorm.DB) error {
 	return nil
 }
 
-func getPokemonsFromFile(fileName string) ([]*pokemons.Pokemon, error) {
+func getPokemonsFromFile(fileName string) ([]*api.Pokemon, error) {
 	if fileName == "" {
 		return nil, errors.New("must enter a valid file name")
 	}
@@ -57,7 +56,7 @@ func getPokemonsFromFile(fileName string) ([]*pokemons.Pokemon, error) {
 		return nil, errors.New("unable to open pokemons json file")
 	}
 
-	var pokemons []*pokemons.Pokemon
+	var pokemons []*api.Pokemon
 	if err = json.NewDecoder(file).Decode(&pokemons); err != nil {
 		return nil, errors.New("unable to unmarshal pokemons")
 	}

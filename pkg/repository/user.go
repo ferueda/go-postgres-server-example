@@ -10,7 +10,6 @@ import (
 
 type UserStore interface {
 	CreateUser(r api.NewUserRequest) (*api.User, error)
-	GetUserByEmail(email string) (*api.User, error)
 	CheckUserPassword(u api.User, password string) bool
 }
 
@@ -32,17 +31,6 @@ func (s *userStore) CreateUser(r api.NewUserRequest) (*api.User, error) {
 
 	u := api.User{Name: r.Name, Email: r.Email, PasswordHash: ph}
 	return &u, s.db.Create(&u).Error
-}
-
-func (s *userStore) GetUserByEmail(email string) (*api.User, error) {
-	var u api.User
-	if err := s.db.Where(&api.User{Email: email}).First(&u).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("not found")
-		}
-		return nil, err
-	}
-	return &u, nil
 }
 
 func (s *userStore) CheckUserPassword(u api.User, password string) bool {
