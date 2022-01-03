@@ -67,7 +67,7 @@ func (s *Server) GetAllPokemons() http.HandlerFunc {
 	}
 }
 
-func (s *Server) GetOne() http.HandlerFunc {
+func (s *Server) GetPokemonById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
@@ -77,14 +77,14 @@ func (s *Server) GetOne() http.HandlerFunc {
 			return
 		}
 
-		pokemon, err := s.pokemonService.GetById(uint(id))
+		p, err := s.pokemonService.GetById(uint(id))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		err = json.NewEncoder(w).Encode(&pokemon)
+		err = json.NewEncoder(w).Encode(&p)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -4,17 +4,16 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/ferueda/go-postgres-server-example/pokemons"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
 
-	Name         string              `json:"name" gorm:"not null;"`
-	Email        string              `json:"email" gorm:"unique;not null;"`
-	PasswordHash string              `json:"-" gorm:"not null;"`
-	Pokemons     []*pokemons.Pokemon `json:"favorites" gorm:"many2many:user_pokemons;"`
+	Name         string     `json:"name" gorm:"not null;"`
+	Email        string     `json:"email" gorm:"unique;not null;"`
+	PasswordHash string     `json:"-" gorm:"not null;"`
+	Pokemons     []*Pokemon `json:"favorites" gorm:"many2many:user_pokemons;"`
 }
 
 type NewUserRequest struct {
@@ -69,7 +68,3 @@ func (us *userService) New(user NewUserRequest) (*User, error) {
 
 	return u, nil
 }
-
-// func (us *userService) GetById(id uint) (*User, error) {
-
-// }
