@@ -31,10 +31,12 @@ type NewUserResponse struct {
 
 type UserService interface {
 	New(user NewUserRequest) (*User, error)
+	GetByEmail(email string) (*User, error)
 }
 
 type UserRepository interface {
 	CreateUser(NewUserRequest) (*User, error)
+	GetByEmail(email string) (*User, error)
 }
 
 type userService struct {
@@ -62,6 +64,19 @@ func (us *userService) New(user NewUserRequest) (*User, error) {
 	user.Email = strings.TrimSpace(user.Email)
 
 	u, err := us.store.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (us *userService) GetByEmail(email string) (*User, error) {
+	if email == "" {
+		return nil, errors.New("user service - email is required")
+	}
+
+	u, err := us.store.GetByEmail(strings.TrimSpace(strings.ToLower(email)))
 	if err != nil {
 		return nil, err
 	}
