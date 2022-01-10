@@ -11,6 +11,7 @@ import (
 type UserStore interface {
 	CreateUser(r api.NewUserRequest) (*api.User, error)
 	GetByEmail(email string) (*api.User, error)
+	GetById(id uint) (*api.User, error)
 	CheckUserPassword(u *api.User, password string) bool
 }
 
@@ -38,6 +39,19 @@ func (s *userStore) GetByEmail(email string) (*api.User, error) {
 	var u api.User
 
 	if err := s.db.Where(&api.User{Email: email}).First(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("not found")
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (s *userStore) GetById(id uint) (*api.User, error) {
+	var u api.User
+
+	if err := s.db.Where(&api.User{}).First(&u, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("not found")
 		}
