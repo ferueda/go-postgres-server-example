@@ -2,8 +2,12 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 )
 
@@ -32,11 +36,13 @@ type NewUserResponse struct {
 type UserService interface {
 	New(user NewUserRequest) (*User, error)
 	GetByEmail(email string) (*User, error)
+	VerifyPassword(u *User, password string) error
 }
 
 type UserRepository interface {
 	CreateUser(NewUserRequest) (*User, error)
 	GetByEmail(email string) (*User, error)
+	CheckUserPassword(u *User, password string) bool
 }
 
 type userService struct {
@@ -82,4 +88,12 @@ func (us *userService) GetByEmail(email string) (*User, error) {
 	}
 
 	return u, nil
+}
+
+func (us *userService) VerifyPassword(u *User, password string) error {
+	if !us.store.CheckUserPassword(u, password) {
+		return errors.New("wrong password")
+	}
+
+	return nil
 }
