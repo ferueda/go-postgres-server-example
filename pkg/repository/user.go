@@ -10,7 +10,8 @@ import (
 
 type UserStore interface {
 	CreateUser(r api.NewUserRequest) (*api.User, error)
-	CheckUserPassword(u api.User, password string) bool
+	GetByEmail(email string) (*api.User, error)
+	CheckUserPassword(u *api.User, password string) bool
 }
 
 type userStore struct {
@@ -33,7 +34,20 @@ func (s *userStore) CreateUser(r api.NewUserRequest) (*api.User, error) {
 	return &u, s.db.Create(&u).Error
 }
 
-func (s *userStore) CheckUserPassword(u api.User, password string) bool {
+func (s *userStore) GetByEmail(email string) (*api.User, error) {
+	var u api.User
+
+	if err := s.db.Where(&api.User{Email: email}).First(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("not found")
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (s *userStore) CheckUserPassword(u *api.User, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
 }
