@@ -44,13 +44,17 @@ type TokenResponse struct {
 type UserService interface {
 	New(user NewUserRequest) (*User, error)
 	GetByEmail(email string) (*User, error)
+	GetById(id uint) (*User, error)
 	VerifyPassword(u *User, password string) error
 	CreateToken(email string) (string, error)
+	VerifyToken(token string) error
+	GetClaims(token string) (jwt.MapClaims, error)
 }
 
 type UserRepository interface {
 	CreateUser(NewUserRequest) (*User, error)
 	GetByEmail(email string) (*User, error)
+	GetById(id uint) (*User, error)
 	CheckUserPassword(u *User, password string) bool
 }
 
@@ -99,6 +103,19 @@ func (us *userService) GetByEmail(email string) (*User, error) {
 	return u, nil
 }
 
+func (us *userService) GetById(id uint) (*User, error) {
+	if id < 1 {
+		return nil, errors.New("user service - wrong id")
+	}
+
+	u, err := us.store.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 func (us *userService) VerifyPassword(u *User, password string) error {
 	if !us.store.CheckUserPassword(u, password) {
 		return errors.New("wrong password")
@@ -140,4 +157,20 @@ func (us *userService) VerifyToken(token string) error {
 	}
 
 	return nil
+}
+
+func (us *userService) GetClaims(token string) (jwt.MapClaims, error) {
+	accessSecret := os.Getenv("ACCESS_SECRET")
+
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(accessSecret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return parsedToken.Claims.(jwt.MapClaims), nil
 }
