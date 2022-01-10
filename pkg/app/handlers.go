@@ -49,6 +49,43 @@ func (s *Server) CreateUser() http.HandlerFunc {
 	}
 }
 
+func (s *Server) GetUserById() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		u, err := s.userService.GetById(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		claims, err := s.userService.GetClaims(extractToken(r))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		email := claims["email"]
+		if email == "" || u.Email != email {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Header().Add("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(&u)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 func (s *Server) GetAllPokemons() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -132,6 +169,18 @@ func (s *Server) Token() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func (s *Server) Auth(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := extractToken(r)
+		if s.userService.VerifyToken(token) != nil {
+			http.Error(w, "not authorized", http.StatusUnauthorized)
+			return
+		}
+
+		h(w, r)
 	}
 }
 

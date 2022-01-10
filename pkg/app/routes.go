@@ -20,6 +20,7 @@ func (s *Server) Routes() *mux.Router {
 	// r.HandleFunc("/users/{id:[0-9]+}/favorites", uh.AddFavorite).Methods("POST")
 
 	r.HandleFunc(base+"/users", s.CreateUser()).Methods("POST")
+	r.HandleFunc(base+"/users/{id:[0-9]+}", s.Auth(s.GetUserById())).Methods("GET")
 	r.HandleFunc(base+"/users/token", s.Token()).Methods("POST")
 
 	return r
