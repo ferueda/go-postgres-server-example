@@ -17,7 +17,7 @@ type User struct {
 	Name         string     `json:"name" gorm:"not null;"`
 	Email        string     `json:"email" gorm:"unique;not null;"`
 	PasswordHash string     `json:"-" gorm:"not null;"`
-	Pokemons     []*Pokemon `json:"favorites" gorm:"many2many:user_pokemons;"`
+	Pokemons     []*Pokemon `json:"-" gorm:"many2many:user_pokemons;"`
 }
 
 type NewUserRequest struct {
@@ -49,6 +49,8 @@ type UserService interface {
 	CreateToken(email string) (string, error)
 	VerifyToken(token string) error
 	GetClaims(token string) (jwt.MapClaims, error)
+	GetFavoritePokemons(id uint) ([]*Pokemon, error)
+	AddFavoritePokemon(id uint, pokemonId uint) error
 }
 
 type UserRepository interface {
@@ -56,6 +58,8 @@ type UserRepository interface {
 	GetByEmail(email string) (*User, error)
 	GetById(id uint) (*User, error)
 	CheckUserPassword(u *User, password string) bool
+	GetFavoritePokemons(u *User) ([]*Pokemon, error)
+	AddFavoritePokemon(uid *User, pokemonId uint) error
 }
 
 type userService struct {
@@ -191,4 +195,26 @@ func (us *userService) GetFavoritePokemons(id uint) ([]*Pokemon, error) {
 	}
 
 	return favs, nil
+}
+
+func (us *userService) AddFavoritePokemon(uid uint, pokemonId uint) error {
+	if uid < 1 {
+		return errors.New("user service - invalid user id")
+	}
+
+	if pokemonId < 1 || pokemonId > 151 {
+		return errors.New("user service - invalid pokemon id")
+	}
+
+	u, err := us.store.GetById(uid)
+	if err != nil {
+		return err
+	}
+
+	err = us.store.AddFavoritePokemon(u, pokemonId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
