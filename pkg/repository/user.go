@@ -13,6 +13,7 @@ type UserStore interface {
 	GetByEmail(email string) (*api.User, error)
 	GetById(id uint) (*api.User, error)
 	CheckUserPassword(u *api.User, password string) bool
+	GetFavoritePokemons(u *api.User) ([]*api.Pokemon, error)
 }
 
 type userStore struct {
@@ -23,6 +24,14 @@ func NewUserStore(db *gorm.DB) UserStore {
 	return &userStore{
 		db: db,
 	}
+}
+
+func hashPassword(password string) (string, error) {
+	if len(password) == 0 {
+		return "", errors.New("password should not be empty")
+	}
+	h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(h), err
 }
 
 func (s *userStore) CreateUser(r api.NewUserRequest) (*api.User, error) {
@@ -66,9 +75,16 @@ func (s *userStore) CheckUserPassword(u *api.User, password string) bool {
 	return err == nil
 }
 
-func hashPassword(password string) (string, error) {
-	if len(password) == 0 {
-		return "", errors.New("password should not be empty")
+func (s *userStore) GetFavoritePokemons(u *api.User) ([]*api.Pokemon, error) {
+	if err := s.db.Preload("Pokemons").First(u, u.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("not found")
+		}
+		return nil, err
+	}
+
+	return u.Pokemons, nil
+}
 	}
 	h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(h), err
