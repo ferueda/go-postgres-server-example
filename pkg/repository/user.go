@@ -14,6 +14,7 @@ type UserStore interface {
 	GetById(id uint) (*api.User, error)
 	CheckUserPassword(u *api.User, password string) bool
 	GetFavoritePokemons(u *api.User) ([]*api.Pokemon, error)
+	AddFavoritePokemon(u *api.User, pokemonId uint) error
 }
 
 type userStore struct {
@@ -85,7 +86,14 @@ func (s *userStore) GetFavoritePokemons(u *api.User) ([]*api.Pokemon, error) {
 
 	return u.Pokemons, nil
 }
+
+func (s *userStore) AddFavoritePokemon(u *api.User, pokemonId uint) error {
+	if pokemonId < 1 || pokemonId > 151 {
+		return errors.New("invalid pokemon id")
 	}
-	h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(h), err
+	if err := s.db.Model(u).Association("Pokemons").Append(&api.Pokemon{ID: pokemonId}); err != nil {
+		return err
+	}
+
+	return nil
 }
