@@ -33,7 +33,6 @@ func (s *Server) ApiStatus() http.HandlerFunc {
 
 func (s *Server) CreateUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		var newUserReq api.NewUserRequest
 		err := json.NewDecoder(r.Body).Decode(&newUserReq)
 		if err != nil {
@@ -47,8 +46,8 @@ func (s *Server) CreateUser() http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 		newUserRes := api.NewUserResponse{Model: u.Model, Name: u.Name, Email: u.Email}
 		err = json.NewEncoder(w).Encode(&newUserRes)
 		if err != nil {
@@ -60,7 +59,6 @@ func (s *Server) CreateUser() http.HandlerFunc {
 
 func (s *Server) GetUserById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -73,20 +71,8 @@ func (s *Server) GetUserById() http.HandlerFunc {
 			return
 		}
 
-		claims, err := s.userService.GetClaims(extractToken(r))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		email := claims["email"]
-		if email == "" || u.Email != email {
-			http.Error(w, "forbidden", http.StatusForbidden)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(&u)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -97,15 +83,14 @@ func (s *Server) GetUserById() http.HandlerFunc {
 
 func (s *Server) GetAllPokemons() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		pokemons, err := s.pokemonService.GetAll()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(&pokemons)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -116,7 +101,6 @@ func (s *Server) GetAllPokemons() http.HandlerFunc {
 
 func (s *Server) GetPokemonById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -129,8 +113,8 @@ func (s *Server) GetPokemonById() http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(&p)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -171,8 +155,8 @@ func (s *Server) Token() http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(&api.TokenResponse{Token: token})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -186,6 +170,30 @@ func (s *Server) Auth(h http.HandlerFunc) http.HandlerFunc {
 		token := extractToken(r)
 		if s.userService.VerifyToken(token) != nil {
 			http.Error(w, "not authorized", http.StatusUnauthorized)
+			return
+		}
+
+		id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		u, err := s.userService.GetById(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		claims, err := s.userService.GetClaims(extractToken(r))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		email := claims["email"]
+		if email == "" || u.Email != email {
+			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
 
