@@ -174,3 +174,21 @@ func (us *userService) GetClaims(token string) (jwt.MapClaims, error) {
 
 	return parsedToken.Claims.(jwt.MapClaims), nil
 }
+
+func (us *userService) GetFavoritePokemons(id uint) ([]*Pokemon, error) {
+	if id < 1 {
+		return nil, errors.New("user service - invalid id")
+	}
+
+	u, err := us.store.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	favs, err := us.store.GetFavoritePokemons(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return favs, nil
+}
