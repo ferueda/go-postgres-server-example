@@ -216,6 +216,31 @@ func (s *Server) GetFavorites() http.HandlerFunc {
 		}
 	}
 }
+
+func (s *Server) AddFavorite() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		var reqData struct {
+			ID uint `json:"id"`
+		}
+
+		err = json.NewDecoder(r.Body).Decode(&reqData)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = s.userService.AddFavoritePokemon(uint(id), reqData.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
 	}
-	return ""
 }
