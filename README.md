@@ -1,7 +1,7 @@
 go-postgres-server-example
 =======
 
-A basic CRUD API written in Go with a PostgreSQL db.
+A basic CRUD API with authentication written in Go with a PostgreSQL db.
 
 ## Stack
 - Go
